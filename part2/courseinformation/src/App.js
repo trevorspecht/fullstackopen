@@ -4,12 +4,21 @@ const Part = ({ part }) => {
   return <p>{part.name} {part.exercises}</p>
 }
 
-const Content = ({ parts }) => {
-  
+const Total = ({ parts }) => {
   return (
-    <ul>
+    <p>
+      total of {parts.reduce((total, next) => {
+        return total + next.exercises
+      }, 0)} exercises
+    </p>
+  )
+}
+
+const Content = ({ parts }) => {
+  return (
+    <p>
       {parts.map(part => <Part key={part.id} part={part} />)}
-    </ul>   
+    </p>   
   )
 }
 
@@ -25,6 +34,7 @@ const Course = ({ course }) => {
     <>
       <Header name={course.name} />
       <Content parts={course.parts} />
+      <Total parts={course.parts} />
     </>
   )
 }
