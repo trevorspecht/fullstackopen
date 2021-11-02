@@ -17,6 +17,10 @@ const App = () => {
 
   const handleNameChange = (event) => {
     setNewName(event.target.value)
+    if (persons.find(person => {
+      return person.name === event.target.value
+    })) 
+      window.alert(`${newName} is already added to the phonebook`)
   }
 
   const addName = (event) => {
