@@ -8,24 +8,35 @@ const Person = ({ name, number }) => {
 
 const App = () => {
   const [ persons, setPersons ] = useState([]) 
-  const [ newName, setNewName ] = useState('')
+  const [newName, setNewName ] = useState('')
   const [newNumber, setNewNumber] = useState('')
+  const [search, setSearch] = useState('')
 
   let personsList = persons.map((person, index) => {
     let keyObj = {key: index, name: person.name, number: person.number}
     return keyObj
   })
 
+  const handleSearch = (event) => {
+    const value = event.target.value
+    setSearch(value)
+    personsList = persons.filter(person => 
+      person.name.toLowerCase().indexOf(value.toLowerCase()) !== -1)
+    setPersons(personsList)
+  }
+
   const handleNameChange = (event) => {
-    setNewName(event.target.value)
+    const value = event.target.value
+    setNewName(value)
     if (persons.find(person => {
-      return person.name === event.target.value
+      return person.name === value
     })) 
       window.alert(`${newName} is already added to the phonebook`)
   }
 
   const handleNumberChange = (event) => {
-    setNewNumber(event.target.value)
+    const value = event.target.value
+    setNewNumber(value)
   }
 
   const addPerson = (event) => {
@@ -44,6 +55,8 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <p>filter shown with <input search={search} onChange={handleSearch} /></p>
+      <h2>add a new</h2>
       <form onSubmit={addPerson}>
         <div>
           <p>name: <input value={newName} onChange={handleNameChange} /></p>
