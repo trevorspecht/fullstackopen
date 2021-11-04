@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import axios from 'axios'
 
 const Person = (props) => {
   return (
@@ -10,7 +11,7 @@ const PersonList = ({ persons }) => {
   return (
     <>
       {persons.map(person => 
-        <Person key={person.key} name={person.name} number={person.number}/>
+        <Person key={person.id} name={person.name} number={person.number}/>
       )}
     </>
   )
@@ -35,7 +36,7 @@ const PersonForm = ({ persons, setPersons, newName, setNewName, newNumber, setNe
   const addPerson = (event) => {
     event.preventDefault()
     const personObj = {
-      key: persons.length,
+      id: persons.length + 1,
       name: newName,
       number: newNumber
     }
@@ -58,12 +59,12 @@ const PersonForm = ({ persons, setPersons, newName, setNewName, newNumber, setNe
   )
 }
 
-const Filter = ({ persons, setPersons, personsList, search, setSearch }) => {
+const Filter = ({ persons, setPersons, search, setSearch }) => {
 
   const handleSearch = (event) => {
     const value = event.target.value
     setSearch(value)
-    personsList = persons.filter(person => 
+    let personsList = persons.filter(person => 
       person.name.toLowerCase().indexOf(value.toLowerCase()) !== -1)
     setPersons(personsList)
   }
@@ -79,15 +80,23 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('')
   const [search, setSearch] = useState('')
 
-  let personsList = persons.map((person, index) => {
-    let keyObj = {key: index, name: person.name, number: person.number}
-    return keyObj
-  })
+  useEffect(() => {
+    axios
+      .get('http://localhost:3001/persons')
+      .then(res => {
+        setPersons(res.data)
+      })
+  }, [])
+
+  // let personsList = persons.map((person, index) => {
+  //   let keyObj = {key: index, name: person.name, number: person.number}
+  //   return keyObj
+  // })
 
   return (
     <div>
       <h2>Phonebook</h2>
-      <Filter persons={persons} setPersons={setPersons} personsList={personsList} search={search} setSearch={setSearch} />
+      <Filter persons={persons} setPersons={setPersons} search={search} setSearch={setSearch} />
       <h3>add a new</h3>
       <PersonForm 
         persons={persons} setPersons={setPersons} 
