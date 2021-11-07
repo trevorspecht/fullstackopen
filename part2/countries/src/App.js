@@ -2,29 +2,48 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 
 const CountryDetails = ({ country }) => {
+  const [weather, setWeather] = useState({
+    current: {
+      weather: [{
+        description: 'loading weather data...'
+      }],
+      temp: 'loading weather data...'
+    }
+  })
+
+  const lat = country.latlng[0]
+  const lon = country.latlng[1]
+
+  useEffect(() => {
+    axios 
+      .get(`https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=metric&appid=${process.env.REACT_APP_API_KEY}`)
+      .then(res => {
+        setWeather(res.data)
+      })
+  }, [lat, lon])
+
   return (
     <div>
       <h2>{country.name.common}</h2>
       <p>capital {country.capital[0]}</p>
       <p>population {country.population}</p>
-      <h3>languages</h3>
+      <h3>Spoken languages</h3>
       <ul>
         {Object.values(country.languages)
-          .map(language => 
-          <li>{language}</li>)}
+          .map((language, index) => 
+          <li key={index}>{language}</li>)}
       </ul>
       <img src={country.flags.png} alt={country.name.common} />
+      <h3>Weather in {country.capital}</h3>
+      <p>{weather.current.weather[0].description}</p>
+      <p>temperature: {weather.current.temp} Celcius</p>
     </div>
   )
 }
 
-const Country = ({ country, setClicked, setFiltered }) => {
+const Country = ({ country, setFiltered }) => {
 
-  const clickHandler = (country) => {
-    setClicked(true)
-    console.log('clicked', country.name.common)
-    setFiltered([country])
-  }
+  const clickHandler = (country) => setFiltered([country])
 
   return (
     <div>
@@ -38,7 +57,7 @@ const Country = ({ country, setClicked, setFiltered }) => {
   )
 }
 
-const Countries = ({ filtered, setFiltered, clicked, setClicked }) => {
+const Countries = ({ filtered, setFiltered }) => {
   console.log('filtered', filtered.length, filtered)
   if (filtered.length > 10) 
     return (
@@ -54,7 +73,6 @@ const Countries = ({ filtered, setFiltered, clicked, setClicked }) => {
         <Country 
           key={country.area} 
           country={country} 
-          setClicked={setClicked} 
           setFiltered={setFiltered} 
         />)
     )
@@ -64,7 +82,6 @@ const App = () => {
   const [countries, setCountries] = useState([])
   const [filter, setFilter] = useState('')
   const [filtered, setFiltered] = useState([])
-  const [clicked, setClicked] = useState(false)
 
   useEffect(() => {
     axios
@@ -89,8 +106,6 @@ const App = () => {
       <Countries 
         filtered={filtered} 
         setFiltered={setFiltered} 
-        clicked={clicked} 
-        setClicked={setClicked}
       />
     </div>
   );
