@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios'
+import personsService from './services/persons'
 
 const Person = (props) => {
   return (
@@ -41,10 +41,10 @@ const PersonForm = ({ persons, setPersons, newName, setNewName, newNumber, setNe
       number: newNumber
     }
 
-    axios
-      .post('http://localhost:3001/persons', personObj)
-      .then(res => {
-        setPersons(persons.concat(res.data))
+    personsService
+      .create(personObj)
+      .then(returnedPerson => {
+        setPersons(persons.concat(returnedPerson))
         setNewName('')
         setNewNumber('')
       })
@@ -85,10 +85,13 @@ const App = () => {
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
-      .then(res => {
-        setPersons(res.data)
+    personsService
+      .getAll()
+      .then(initialPersons => {
+        setPersons(initialPersons)
+      })
+      .catch(error => {
+        console.log('error getting phonebook', error)
       })
   }, [])
 
