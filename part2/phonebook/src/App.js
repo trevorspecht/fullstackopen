@@ -1,17 +1,36 @@
 import React, { useEffect, useState } from 'react'
 import personsService from './services/persons'
 
-const Person = (props) => {
+const Person = ({ person, persons, setPersons }) => {
+
+  const removePerson = (person) => {
+    console.log(person)
+    const idToRemove = person.id
+    
+    if (window.confirm(`are you sure you want to delete ${person.name}?`)) {
+      personsService
+      .remove(idToRemove)
+      .then(response => {
+        console.log('response', response)
+        setPersons(persons.filter(person => person.id !== idToRemove))
+      })
+      .catch(error => console.log(error.response))
+    }
+  }
+
   return (
-    <p>{props.name} {props.number}</p>
+    <p>
+      {person.name} {person.number}
+      <button onClick={() => removePerson(person)}>delete</button>
+    </p>
   )
 }
 
-const PersonList = ({ persons }) => {
+const PersonList = ({ persons, setPersons }) => {
   return (
     <>
       {persons.map(person => 
-        <Person key={person.id} name={person.name} number={person.number}/>
+        <Person key={person.id} person={person} persons={persons} setPersons={setPersons} />
       )}
     </>
   )
@@ -36,7 +55,7 @@ const PersonForm = ({ persons, setPersons, newName, setNewName, newNumber, setNe
   const addPerson = (event) => {
     event.preventDefault()
     const personObj = {
-      id: persons.length + 1,
+      id: Date.now(),
       name: newName,
       number: newNumber
     }
@@ -48,6 +67,7 @@ const PersonForm = ({ persons, setPersons, newName, setNewName, newNumber, setNe
         setNewName('')
         setNewNumber('')
       })
+      .catch(error => console.log(error.response))
   }
 
   return (
@@ -95,11 +115,6 @@ const App = () => {
       })
   }, [])
 
-  // let personsList = persons.map((person, index) => {
-  //   let keyObj = {key: index, name: person.name, number: person.number}
-  //   return keyObj
-  // })
-
   return (
     <div>
       <h2>Phonebook</h2>
@@ -111,7 +126,7 @@ const App = () => {
         newNumber={newNumber} setNewNumber={setNewNumber}
       />
       <h3>Numbers</h3>
-      <PersonList persons={persons} />
+      <PersonList persons={persons} setPersons={setPersons} />
     </div>
   )
 }
