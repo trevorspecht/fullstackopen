@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import personsService from './services/persons'
 
-const Person = ({ person, persons, setPersons }) => {
+const Person = ({ person, persons, setFiltered }) => {
 
   const removePerson = (person) => {
     const idToRemove = person.id
@@ -11,7 +11,7 @@ const Person = ({ person, persons, setPersons }) => {
         .remove(idToRemove)
         .then(response => {
           console.log('response', response)
-          setPersons(persons.filter(person => person.id !== idToRemove))
+          setFiltered(persons.filter(person => person.id !== idToRemove))
         })
         .catch(error => console.log(error.response))
     }
@@ -25,17 +25,17 @@ const Person = ({ person, persons, setPersons }) => {
   )
 }
 
-const PersonList = ({ persons, setPersons }) => {
+const PersonList = ({ filtered, setFiltered, persons }) => {
   return (
     <>
-      {persons.map(person => 
-        <Person key={person.id} person={person} persons={persons} setPersons={setPersons} />
+      {filtered.map(person => 
+        <Person key={person.id} person={person} persons={persons} setFiltered={setFiltered} />
       )}
     </>
   )
 }
 
-const PersonForm = ({ persons, setPersons, newName, setNewName, newNumber, setNewNumber }) => {
+const PersonForm = ({ persons, setFiltered, newName, setNewName, newNumber, setNewNumber, setNotification }) => {
 
   const handleNameChange = (event) => {
     const value = event.target.value
@@ -59,15 +59,23 @@ const PersonForm = ({ persons, setPersons, newName, setNewName, newNumber, setNe
         personsService
           .update(foundPerson[0])
           .then(response => {
-            setPersons(persons.map(person => {
+            setFiltered(persons.map(person => {
               if (person.id === response.id) return response
               else return person
             }))
+            setNotification({ text: `${newName} has had their number changed`, error: false })
+            setTimeout(() => {
+              setNotification({ text: null, error: false })
+            }, 5000)
             setNewName('')
             setNewNumber('')
           })
           .catch(error => {
             console.log(error.response)
+            setNotification({ text: `error changing number for ${newName}`, error: true})
+            setTimeout(() => {
+              setNotification({ text: null, error: false })
+            }, 5000)
             setNewName('')
             setNewNumber('')
           })
@@ -82,12 +90,20 @@ const PersonForm = ({ persons, setPersons, newName, setNewName, newNumber, setNe
       personsService
         .create(personObj)
         .then(returnedPerson => {
-          setPersons(persons.concat(returnedPerson))
+          setFiltered(persons.concat(returnedPerson))
+          setNotification({ text: `added ${newName} to the phonebook`, error: false})
+          setTimeout(() => {
+            setNotification({ text: null, error: false })
+          }, 5000)
           setNewName('')
           setNewNumber('')
         })
         .catch(error => {
           console.log(error.response)
+          setNotification({ text: `error adding ${newName} to the phonebook`, error: true})
+          setTimeout(() => {
+            setNotification({ text: null, error: false })
+          }, 5000)
           setNewName('')
           setNewNumber('')
         })
@@ -107,14 +123,13 @@ const PersonForm = ({ persons, setPersons, newName, setNewName, newNumber, setNe
   )
 }
 
-const Filter = ({ persons, setPersons, search, setSearch }) => {
+const Filter = ({ persons, setFiltered, search, setSearch }) => {
 
   const handleSearch = (event) => {
     const value = event.target.value
     setSearch(value)
-    let personsList = persons.filter(person => 
-      person.name.toLowerCase().indexOf(value.toLowerCase()) !== -1)
-    setPersons(personsList)
+    setFiltered(persons.filter(person => 
+      person.name.toLowerCase().indexOf(value.toLowerCase()) !== -1))
   }
 
   return (
@@ -122,17 +137,39 @@ const Filter = ({ persons, setPersons, search, setSearch }) => {
   )
 }
 
+const Notification = ({ notification }) => {
+  const color = notification.error ? 'red' : 'green'
+  const notificationStyle = {
+    color: color,
+    background: 'lightgrey',
+    borderStyle: 'solid',
+    borderRadius: '5px',
+    padding: '10px',
+    fontSize: 20
+  }
+
+  if (notification.text === null) return null
+  else return (
+    <div style={notificationStyle}>
+      {notification.text}
+    </div>
+  )
+}
+
 const App = () => {
   const [persons, setPersons] = useState([]) 
+  const [filtered, setFiltered] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [search, setSearch] = useState('')
+  const [notification, setNotification] = useState({ text: null, error: false })
 
   useEffect(() => {
     personsService
       .getAll()
       .then(initialPersons => {
         setPersons(initialPersons)
+        setFiltered(initialPersons)
       })
       .catch(error => {
         console.log('error getting phonebook', error)
@@ -141,16 +178,18 @@ const App = () => {
 
   return (
     <div>
-      <h2>Phonebook</h2>
-      <Filter persons={persons} setPersons={setPersons} search={search} setSearch={setSearch} />
+      <h1>Phonebook</h1>
+      <Notification notification={notification} />
+      <Filter persons={persons} setFiltered={setFiltered} search={search} setSearch={setSearch} />
       <h3>add a new</h3>
       <PersonForm 
-        persons={persons} setPersons={setPersons} 
+        persons={persons} setFiltered={setFiltered}
         newName={newName} setNewName={setNewName} 
-        newNumber={newNumber} setNewNumber={setNewNumber}
+        newNumber={newNumber} setNewNumber={setNewNumber} 
+        setNotification={setNotification}
       />
       <h3>Numbers</h3>
-      <PersonList persons={persons} setPersons={setPersons} />
+      <PersonList filtered={filtered} setFiltered={setFiltered} persons={persons} />
     </div>
   )
 }
