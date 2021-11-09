@@ -4,17 +4,16 @@ import personsService from './services/persons'
 const Person = ({ person, persons, setPersons }) => {
 
   const removePerson = (person) => {
-    console.log(person)
     const idToRemove = person.id
-    
+
     if (window.confirm(`are you sure you want to delete ${person.name}?`)) {
       personsService
-      .remove(idToRemove)
-      .then(response => {
-        console.log('response', response)
-        setPersons(persons.filter(person => person.id !== idToRemove))
-      })
-      .catch(error => console.log(error.response))
+        .remove(idToRemove)
+        .then(response => {
+          console.log('response', response)
+          setPersons(persons.filter(person => person.id !== idToRemove))
+        })
+        .catch(error => console.log(error.response))
     }
   }
 
@@ -41,10 +40,6 @@ const PersonForm = ({ persons, setPersons, newName, setNewName, newNumber, setNe
   const handleNameChange = (event) => {
     const value = event.target.value
     setNewName(value)
-    if (persons.find(person => {
-      return person.name === value
-    })) 
-      window.alert(`${newName} is already added to the phonebook`)
   }
 
   const handleNumberChange = (event) => {
@@ -54,20 +49,49 @@ const PersonForm = ({ persons, setPersons, newName, setNewName, newNumber, setNe
 
   const addPerson = (event) => {
     event.preventDefault()
-    const personObj = {
-      id: Date.now(),
-      name: newName,
-      number: newNumber
-    }
 
-    personsService
-      .create(personObj)
-      .then(returnedPerson => {
-        setPersons(persons.concat(returnedPerson))
-        setNewName('')
-        setNewNumber('')
-      })
-      .catch(error => console.log(error.response))
+    let foundPerson = persons.filter(person => person.name === newName)
+
+    if (foundPerson.length > 0) {
+      if (window.confirm(`${newName} is already added to the phonebook, replace the old number with the new one?`)) {
+        foundPerson[0].number = newNumber
+
+        personsService
+          .update(foundPerson[0])
+          .then(response => {
+            setPersons(persons.map(person => {
+              if (person.id === response.id) return response
+              else return person
+            }))
+            setNewName('')
+            setNewNumber('')
+          })
+          .catch(error => {
+            console.log(error.response)
+            setNewName('')
+            setNewNumber('')
+          })
+      }
+    } else {
+      const personObj = {
+        id: Date.now(),
+        name: newName,
+        number: newNumber
+      }
+
+      personsService
+        .create(personObj)
+        .then(returnedPerson => {
+          setPersons(persons.concat(returnedPerson))
+          setNewName('')
+          setNewNumber('')
+        })
+        .catch(error => {
+          console.log(error.response)
+          setNewName('')
+          setNewNumber('')
+        })
+    }
   }
 
   return (
