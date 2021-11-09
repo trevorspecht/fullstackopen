@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import personsService from './services/persons'
 
-const Person = ({ person, persons, setFiltered }) => {
+const Person = ({ person, persons, setPersons, setFiltered, setNotification }) => {
 
   const removePerson = (person) => {
     const idToRemove = person.id
@@ -12,8 +12,21 @@ const Person = ({ person, persons, setFiltered }) => {
         .then(response => {
           console.log('response', response)
           setFiltered(persons.filter(person => person.id !== idToRemove))
+          setPersons(persons.filter(person => person.id !== idToRemove))
         })
-        .catch(error => console.log(error.response))
+        .catch(error => {
+          console.log(error.response)
+          if (error.response.status === 404) {
+            setNotification({ text: `${person.name} has already been removed from the phonebook`, error: true })
+            setFiltered(persons.filter(person => person.id !== idToRemove))
+            setPersons(persons.filter(person => person.id !== idToRemove))
+          }
+        else 
+          setNotification({ text: `error removing ${person.name}`, error: true})
+        setTimeout(() => {
+          setNotification({ text: null, error: false })
+        }, 5000)
+        })
     }
   }
 
@@ -25,17 +38,17 @@ const Person = ({ person, persons, setFiltered }) => {
   )
 }
 
-const PersonList = ({ filtered, setFiltered, persons }) => {
+const PersonList = ({ filtered, setFiltered, persons, setPersons, setNotification }) => {
   return (
     <>
       {filtered.map(person => 
-        <Person key={person.id} person={person} persons={persons} setFiltered={setFiltered} />
+        <Person key={person.id} person={person} persons={persons} setPersons={setPersons} setFiltered={setFiltered} setNotification={setNotification} />
       )}
     </>
   )
 }
 
-const PersonForm = ({ persons, setFiltered, newName, setNewName, newNumber, setNewNumber, setNotification }) => {
+const PersonForm = ({ persons, setPersons, setFiltered, newName, setNewName, newNumber, setNewNumber, setNotification }) => {
 
   const handleNameChange = (event) => {
     const value = event.target.value
@@ -72,7 +85,14 @@ const PersonForm = ({ persons, setFiltered, newName, setNewName, newNumber, setN
           })
           .catch(error => {
             console.log(error.response)
-            setNotification({ text: `error changing number for ${newName}`, error: true})
+            if (error.response.status === 404) {
+              setNotification({ text: `${newName} has already been removed from the phonebook`, error: true })
+              setFiltered(persons.filter(person => person.id !== foundPerson[0].id))
+              setPersons(persons.filter(person => person.id !== foundPerson[0].id))
+            } else {
+              setNotification({ text: `error changing number for ${newName}`, error: true})
+            }
+
             setTimeout(() => {
               setNotification({ text: null, error: false })
             }, 5000)
@@ -91,6 +111,7 @@ const PersonForm = ({ persons, setFiltered, newName, setNewName, newNumber, setN
         .create(personObj)
         .then(returnedPerson => {
           setFiltered(persons.concat(returnedPerson))
+          setPersons(persons.concat(returnedPerson))
           setNotification({ text: `added ${newName} to the phonebook`, error: false})
           setTimeout(() => {
             setNotification({ text: null, error: false })
@@ -183,13 +204,14 @@ const App = () => {
       <Filter persons={persons} setFiltered={setFiltered} search={search} setSearch={setSearch} />
       <h3>add a new</h3>
       <PersonForm 
-        persons={persons} setFiltered={setFiltered}
+        persons={persons} setPersons = {setPersons}
+        filtered={filtered} setFiltered={setFiltered}
         newName={newName} setNewName={setNewName} 
         newNumber={newNumber} setNewNumber={setNewNumber} 
         setNotification={setNotification}
       />
       <h3>Numbers</h3>
-      <PersonList filtered={filtered} setFiltered={setFiltered} persons={persons} />
+      <PersonList filtered={filtered} setFiltered={setFiltered} persons={persons} setPersons={setPersons} setNotification={setNotification} />
     </div>
   )
 }
