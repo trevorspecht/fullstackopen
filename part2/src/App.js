@@ -8,15 +8,12 @@ const App = () => {
   const [showAll, setShowAll] = useState(true)
 
   useEffect(() => {
-    console.log('effect')
     axios
-      .get('http://localhost:3001/notes')
+      .get('http://localhost:3001/api/notes')
       .then(res => {
-        console.log('promise fulfilled')
         setNotes(res.data)
       })
   }, [])
-  console.log('render', notes.length, 'notes')
 
   const handleNoteChange = (event) => {
     console.log(event.target.value)
