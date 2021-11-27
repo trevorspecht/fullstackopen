@@ -48,7 +48,7 @@ const PersonList = ({ filtered, setFiltered, persons, setPersons, setNotificatio
   )
 }
 
-const PersonForm = ({ persons, setPersons, setFiltered, newName, setNewName, newNumber, setNewNumber, setNotification }) => {
+const PersonForm = ({ persons, setPersons, filtered, setFiltered, newName, setNewName, newNumber, setNewNumber, setNotification }) => {
 
   const handleNameChange = (event) => {
     const value = event.target.value
@@ -72,6 +72,7 @@ const PersonForm = ({ persons, setPersons, setFiltered, newName, setNewName, new
         personsService
           .update(foundPerson[0])
           .then(response => {
+            console.log(response)
             setFiltered(persons.map(person => {
               if (person.id === response.id) return response
               else return person
@@ -102,16 +103,17 @@ const PersonForm = ({ persons, setPersons, setFiltered, newName, setNewName, new
       }
     } else {
       const personObj = {
-        id: Date.now(),
+        // id: Date.now(),
         name: newName,
         number: newNumber
       }
 
       personsService
         .create(personObj)
-        .then(returnedPerson => {
-          setFiltered(persons.concat(returnedPerson))
-          setPersons(persons.concat(returnedPerson))
+        .then(response => {
+          console.log('response: ', response)
+          setFiltered(filtered.concat(response))
+          setPersons(persons.concat(response))
           setNotification({ text: `added ${newName} to the phonebook`, error: false})
           setTimeout(() => {
             setNotification({ text: null, error: false })
@@ -201,7 +203,12 @@ const App = () => {
     <div>
       <h1>Phonebook</h1>
       <Notification notification={notification} />
-      <Filter persons={persons} setFiltered={setFiltered} search={search} setSearch={setSearch} />
+      <Filter 
+        persons={persons} 
+        setFiltered={setFiltered} 
+        search={search} 
+        setSearch={setSearch} 
+      />
       <h3>add a new</h3>
       <PersonForm 
         persons={persons} setPersons = {setPersons}
@@ -211,7 +218,13 @@ const App = () => {
         setNotification={setNotification}
       />
       <h3>Numbers</h3>
-      <PersonList filtered={filtered} setFiltered={setFiltered} persons={persons} setPersons={setPersons} setNotification={setNotification} />
+      <PersonList 
+        filtered={filtered} 
+        setFiltered={setFiltered} 
+        persons={persons} 
+        setPersons={setPersons} 
+        setNotification={setNotification} 
+      />
     </div>
   )
 }
