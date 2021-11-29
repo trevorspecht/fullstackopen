@@ -72,7 +72,6 @@ const PersonForm = ({ persons, setPersons, filtered, setFiltered, newName, setNe
         personsService
           .update(foundPerson[0])
           .then(response => {
-            console.log(response)
             setFiltered(persons.map(person => {
               if (person.id === response.id) return response
               else return person
@@ -85,20 +84,15 @@ const PersonForm = ({ persons, setPersons, filtered, setFiltered, newName, setNe
             setNewNumber('')
           })
           .catch(error => {
-            console.log(error.response)
-            if (error.response.status === 404) {
-              setNotification({ text: `${newName} has already been removed from the phonebook`, error: true })
-              setFiltered(persons.filter(person => person.id !== foundPerson[0].id))
-              setPersons(persons.filter(person => person.id !== foundPerson[0].id))
+            console.log(error.response.data)
+            if (error.response.data.errname === 'ValidationError') {
+              setNotification({ text: error.response.data.errmsg, error: true})
             } else {
               setNotification({ text: `error changing number for ${newName}`, error: true})
             }
-
             setTimeout(() => {
               setNotification({ text: null, error: false })
             }, 5000)
-            setNewName('')
-            setNewNumber('')
           })
       }
     } else {
@@ -122,8 +116,11 @@ const PersonForm = ({ persons, setPersons, filtered, setFiltered, newName, setNe
           setNewNumber('')
         })
         .catch(error => {
-          console.log(error.response)
-          setNotification({ text: `error adding ${newName} to the phonebook`, error: true})
+          console.log(error.response.data)
+          if (error.response.data.errname === 'ValidationError')
+            setNotification({ text: error.response.data.errmsg, error: true})
+          else
+            setNotification({ text: `error adding ${newName} to the phonebook`, error: true})
           setTimeout(() => {
             setNotification({ text: null, error: false })
           }, 5000)
